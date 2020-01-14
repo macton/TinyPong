@@ -7,6 +7,7 @@ TinySamples/Builds
 Library
 [Ll]ogs
 [Tt]emp
+obj/*
 obj
 obj.meta
 
