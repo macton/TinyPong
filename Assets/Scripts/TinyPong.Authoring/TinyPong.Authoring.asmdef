@@ -1,0 +1,25 @@
+{
+    "name": "TinyPong.Authoring",
+    "references": [
+        "Unity.Entities",
+        "Unity.Transforms",
+        "Unity.Jobs",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.Physics",
+        "Unity.Rendering.Hybrid",
+        "Unity.Entities.Hybrid",
+        "Unity.Collections",
+        "Unity.Tiny.Input",
+        "TinyPong"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
