@@ -60,3 +60,24 @@ public struct KeyCodeDown : IComponentData
 {
     public KeyCode Value;
 }
+
+public struct Score : IComponentData
+{
+    public int Value;
+}
+
+public struct PrevScore : IComponentData
+{
+    public int Value;
+}
+
+public struct UIElement : IBufferElementData
+{
+    public Entity Value;
+}
+
+public struct ScoreManager : IComponentData
+{
+    public Entity LeftScoreEntity;
+    public Entity RightScoreEntity;
+}

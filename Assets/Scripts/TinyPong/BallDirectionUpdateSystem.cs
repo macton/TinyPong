@@ -18,7 +18,6 @@ public class directionUpdateSystem : JobComponentSystem
     
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
-        var deltaTime = math.min(1.0f / 60.0f, Time.DeltaTime);
         var obstacleBounds = m_ObstacleQuery.ToComponentDataArray<LocalBounds>(Allocator.TempJob);
         var obstacleBendAngles = m_ObstacleQuery.ToComponentDataArray<ObstacleBendAngle>(Allocator.TempJob);
 
@@ -36,11 +35,7 @@ public class directionUpdateSystem : JobComponentSystem
                     direction.Value = new float2(direction.Value.x, -direction.Value.y);
                 if (localPosition.y >= playAreaMax)
                     direction.Value = new float2(direction.Value.x, -direction.Value.y);
-                if (localPosition.x <= playAreaMin)
-                    direction.Value = new float2(-direction.Value.x, direction.Value.y);
-                if (localPosition.x >= playAreaMax)
-                    direction.Value = new float2(-direction.Value.x, direction.Value.y);
-
+                
                 for (int i = 0; i < obstacleBounds.Length; i++)
                 {
                     var obstacle = obstacleBounds[i];
