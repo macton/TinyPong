@@ -7,8 +7,20 @@ using Unity.Transforms;
 
 public class ScoreUISystem : JobComponentSystem
 {
+    BeginInitializationEntityCommandBufferSystem m_EntityCommandBufferSystem;
+        
+    protected override void OnCreate()
+    {
+        // Cache the BeginInitializationEntityCommandBufferSystem in a field, so we don't have to create it every frame
+        m_EntityCommandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+    }
+
+
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
+        
+        var commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
+
         Entities
             .WithStructuralChanges()
             .ForEach((Entity entity, ref PrevScore prevScore, in Score score, in Translation translation, in DynamicBuffer<UIElement> uiElementBuffer) =>
@@ -20,8 +32,10 @@ public class ScoreUISystem : JobComponentSystem
                     var instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
                     if (instanceBuffer.Length > 0)
                     {
+                        // Defer deletion one frame so new instances have a chance to init before these are removed.
                         var instanceElements = instanceBuffer.Reinterpret<Entity>().ToNativeArray(Allocator.Temp);
-                        EntityManager.DestroyEntity(instanceElements);
+                        for (int i=0;i<instanceElements.Length;i++)
+                            commandBuffer.DestroyEntity(instanceElements[i]);
                         instanceElements.Dispose();
                         
                         instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
@@ -79,6 +93,7 @@ public class ScoreUISystem : JobComponentSystem
                 uiElements.Dispose();
             }).Run();
 
+        m_EntityCommandBufferSystem.AddJobHandleForProducer(lastJobHandle); 
         
         return lastJobHandle;
     }
