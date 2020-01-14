@@ -6,7 +6,7 @@ using UnityEngine;
 
 [RequiresEntityConversion]
 [AddComponentMenu("TinyPong/Score")]
-[ConverterVersion("macton", 4)]
+[ConverterVersion("macton", 5)]
 public class ScoreAuthoring : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs 
 {
     public GameObject[] Numbers;
@@ -23,5 +23,6 @@ public class ScoreAuthoring : MonoBehaviour, IConvertGameObjectToEntity, IDeclar
         var numbersBuffer = dstManager.AddBuffer<UIElement>(entity);
         for (int i = 0; i < Numbers.Length; i++)
             numbersBuffer.Add(new UIElement {Value = conversionSystem.GetPrimaryEntity(Numbers[i])});
+        var instanceBuffer = dstManager.AddBuffer<LinkedEntityGroup>(entity);
     }
 }

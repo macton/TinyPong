@@ -11,12 +11,23 @@ public class ScoreUISystem : JobComponentSystem
     {
         Entities
             .WithStructuralChanges()
-            .ForEach((ref PrevScore prevScore, in Score score, in Translation translation, in DynamicBuffer<UIElement> uiElementBuffer) =>
+            .ForEach((Entity entity, ref PrevScore prevScore, in Score score, in Translation translation, in DynamicBuffer<UIElement> uiElementBuffer) =>
             {
                 var uiElements = uiElementBuffer.Reinterpret<Entity>().ToNativeArray(Allocator.Temp);
                 
                 if (score.Value != prevScore.Value)
                 {
+                    var instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
+                    if (instanceBuffer.Length > 0)
+                    {
+                        var instanceElements = instanceBuffer.Reinterpret<Entity>().ToNativeArray(Allocator.Temp);
+                        EntityManager.DestroyEntity(instanceElements);
+                        instanceElements.Dispose();
+                        
+                        instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
+                        instanceBuffer.Clear();
+                    }
+                    
                     var hundreds = score.Value / 100;
                     var tens = (score.Value - (hundreds * 100)) / 10;
                     var ones = (score.Value - (hundreds * 100) - (tens * 10));
@@ -56,6 +67,11 @@ public class ScoreUISystem : JobComponentSystem
                             z = translation.Value.z,
                         }
                     });
+
+                    instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
+                    instanceBuffer.Add(new LinkedEntityGroup {Value = entity0});
+                    instanceBuffer.Add(new LinkedEntityGroup {Value = entity1});
+                    instanceBuffer.Add(new LinkedEntityGroup {Value = entity2});
                     
                     prevScore.Value = score.Value;
                 }
