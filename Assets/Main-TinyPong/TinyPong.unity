@@ -409,6 +409,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Speed: 0.75
   MaxBendAngle: 60
+  AutoKeyTimeout: 5
+  AutoReactDistance: 0.4
+  AutoBoundsRange: 0.75
   KeyCodeUp: 119
   KeyCodeDown: 115
 --- !u!1 &760958564
@@ -676,6 +679,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Speed: 0.75
   MaxBendAngle: 60
+  AutoKeyTimeout: 5
+  AutoReactDistance: 0.4
+  AutoBoundsRange: 0.75
   KeyCodeUp: 105
   KeyCodeDown: 107
 --- !u!1 &1517338716

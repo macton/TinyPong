@@ -61,6 +61,11 @@ public struct KeyCodeDown : IComponentData
     public KeyCode Value;
 }
 
+public struct AutoKeyTimer : IComponentData
+{
+    public float Value;
+}
+
 public struct Score : IComponentData
 {
     public int Value;
@@ -80,4 +85,11 @@ public struct ScoreManager : IComponentData
 {
     public Entity LeftScoreEntity;
     public Entity RightScoreEntity;
+}
+
+public struct AutoKeyConfig : IComponentData
+{
+    public float AutoKeyTimeout;
+    public float AutoReactDistance;
+    public float AutoBoundsRange;
 }
