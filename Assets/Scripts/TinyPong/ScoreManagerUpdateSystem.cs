@@ -1,7 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
 using Unity.Transforms;
 
 public class ScoreManagerUpdateSystem : JobComponentSystem
@@ -40,14 +39,14 @@ public class ScoreManagerUpdateSystem : JobComponentSystem
                 {
                     var scoreValue = (scoreFromEntity[scoreManager.RightScoreEntity].Value + 1)%1000;
                     scoreFromEntity[scoreManager.RightScoreEntity] = new Score { Value = scoreValue};
-                    translationFromEntity[entity] = new Translation();
+                    translationFromEntity[entity] = translationFromEntity[scoreManager.RightPaddleEntity];
                 }
 
                 if (localPosition.x >= playAreaMax)
                 {
                     var scoreValue = (scoreFromEntity[scoreManager.LeftScoreEntity].Value + 1)%1000;
                     scoreFromEntity[scoreManager.LeftScoreEntity] = new Score { Value = scoreValue};
-                    translationFromEntity[entity] = new Translation();
+                    translationFromEntity[entity] = translationFromEntity[scoreManager.LeftPaddleEntity];
                 }
             }
 

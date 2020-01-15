@@ -85,6 +85,8 @@ public struct ScoreManager : IComponentData
 {
     public Entity LeftScoreEntity;
     public Entity RightScoreEntity;
+    public Entity LeftPaddleEntity;
+    public Entity RightPaddleEntity;
 }
 
 public struct AutoKeyConfig : IComponentData

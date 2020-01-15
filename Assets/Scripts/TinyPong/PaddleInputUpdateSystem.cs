@@ -30,7 +30,7 @@ public class PaddleInputUpdateSystem : JobComponentSystem
         var ballEntities = m_BallQuery.ToEntityArray(Allocator.TempJob);
 
         Entities
-            .WithStructuralChanges()
+            .WithoutBurst()
             .ForEach((
                 ref Translation translation, 
                 ref AutoKeyTimer autoKeyTimer, 

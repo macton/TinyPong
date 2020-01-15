@@ -315,6 +315,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LeftScore: {fileID: 339440941}
   RightScore: {fileID: 1753567588}
+  LeftPaddle: {fileID: 725799679}
+  RightPaddle: {fileID: 1431591402}
 --- !u!1 &725799679
 GameObject:
   m_ObjectHideFlags: 0
@@ -410,7 +412,7 @@ MonoBehaviour:
   Speed: 0.75
   MaxBendAngle: 60
   AutoKeyTimeout: 5
-  AutoReactDistance: 0.4
+  AutoReactDistance: 0.425
   AutoBoundsRange: 0.75
   KeyCodeUp: 119
   KeyCodeDown: 115
@@ -680,7 +682,7 @@ MonoBehaviour:
   Speed: 0.75
   MaxBendAngle: 60
   AutoKeyTimeout: 5
-  AutoReactDistance: 0.4
+  AutoReactDistance: 0.425
   AutoBoundsRange: 0.75
   KeyCodeUp: 105
   KeyCodeDown: 107

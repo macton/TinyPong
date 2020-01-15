@@ -8,7 +8,7 @@
         "EnableManagedDebugging": false,
         "EnableMultiThreading": false,
         "EnableBurst": true,
-        "RootAssembly": "GlobalObjectId_V1-1-9c93346065c8be04c834bea5c41079be-5897886265953266890-0",
+        "RootAssembly": "GlobalObjectId_V1-1-9c03e2d4b688942ec884d2edf6f055c5-5897886265953266890-0",
         "Target": "ios",
         "Configuration": 2,
         "Pipeline": "GlobalObjectId_V1-1-56241f83dacec1141b7d967eb30bf934-93214019566545601-0",
