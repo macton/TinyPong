@@ -2,7 +2,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Tiny;
 using Unity.Transforms;
 
 public class ScoreUISystem : JobComponentSystem
@@ -15,10 +14,8 @@ public class ScoreUISystem : JobComponentSystem
         m_EntityCommandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
-
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
-        
         var commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
 
         Entities

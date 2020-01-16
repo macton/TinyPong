@@ -95,3 +95,12 @@ public struct AutoKeyConfig : IComponentData
     public float AutoReactDistance;
     public float AutoBoundsRange;
 }
+
+public struct PowerUp : IComponentData
+{
+}
+
+public struct PowerUpMoreBalls : IBufferElementData
+{
+    public Entity Value;
+}

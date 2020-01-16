@@ -3,6 +3,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+[UpdateAfter(typeof(TransformSystemGroup))]
 public class LocalBoundsUpdateSystem : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)

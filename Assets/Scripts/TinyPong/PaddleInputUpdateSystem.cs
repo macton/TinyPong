@@ -56,14 +56,17 @@ public class PaddleInputUpdateSystem : JobComponentSystem
                     if (autoKeyTimer.Value >= autoKeyConfig.AutoKeyTimeout)
                     {
                         // follow first ball
-                        var ballEntity = ballEntities[0];
-                        var ballTranslation = translationFromEntity[ballEntity];
-                        if (math.abs(ballTranslation.Value.x - translation.Value.x) < autoKeyConfig.AutoReactDistance)
+                        if (ballEntities.Length > 0)
                         {
-                            if (ballTranslation.Value.y > (localBounds.Center.y + (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
-                                Up(ref translation, localBounds, speed, deltaTime);
-                            else if (ballTranslation.Value.y < (localBounds.Center.y - (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
-                                Down(ref translation, localBounds, speed, deltaTime);
+                            var ballEntity = ballEntities[0];
+                            var ballTranslation = translationFromEntity[ballEntity];
+                            if (math.abs(ballTranslation.Value.x - translation.Value.x) < autoKeyConfig.AutoReactDistance)
+                            {
+                                if (ballTranslation.Value.y > (localBounds.Center.y + (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
+                                    Up(ref translation, localBounds, speed, deltaTime);
+                                else if (ballTranslation.Value.y < (localBounds.Center.y - (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
+                                    Down(ref translation, localBounds, speed, deltaTime);
+                            }
                         }
                     }
                 }

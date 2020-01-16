@@ -4,10 +4,9 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Collections;
 
-public class directionUpdateSystem : JobComponentSystem
+public class BallDirectionUpdateSystem : JobComponentSystem
 {
     EntityQuery m_ObstacleQuery;
-    private const float m_EdgeEpsilon = 0.01f;
 
     protected override void OnCreate()
     {
@@ -25,7 +24,6 @@ public class directionUpdateSystem : JobComponentSystem
     {
         var obstacleBounds = m_ObstacleQuery.ToComponentDataArray<LocalBounds>(Allocator.TempJob);
         var obstacleBendAngles = m_ObstacleQuery.ToComponentDataArray<ObstacleBendAngle>(Allocator.TempJob);
-        var edgeEpsilon = m_EdgeEpsilon;
 
         Entities
             .WithAll<Ball>()
@@ -39,10 +37,10 @@ public class directionUpdateSystem : JobComponentSystem
 
                 if (localPosition.y <= playAreaMin)
                     if (direction.Value.y < 0)
-                        direction.Value = new float2(direction.Value.x, -direction.Value.y);
+                        direction.Value.y = -direction.Value.y;
                 if (localPosition.y >= playAreaMax)
                     if (direction.Value.y > 0)
-                        direction.Value = new float2(direction.Value.x, -direction.Value.y);
+                        direction.Value.y = -direction.Value.y;
 
                 for (int i = 0; i < obstacleBounds.Length; i++)
                 {
@@ -59,15 +57,14 @@ public class directionUpdateSystem : JobComponentSystem
                         var bendAngle = bendEdge * obstacleBendAngle.Value;
                         var obstacleNormalAngle = isRight ? bendAngle : (math.PI - bendAngle);
                         var obstacleNormal = new float2(math.cos(obstacleNormalAngle), math.sin(obstacleNormalAngle));
-
-                        if (localPosition.y <= (playAreaMin + edgeEpsilon))
-                            if (obstacleNormal.y < 0)
-                                obstacleNormal.y = -obstacleNormal.y;
-                        if (localPosition.y >= (playAreaMax - edgeEpsilon))
-                            if (obstacleNormal.y > 0)
-                                obstacleNormal.y = -obstacleNormal.y;
-
                         direction.Value = obstacleNormal;
+
+                        if (localPosition.y <= playAreaMin)
+                            if (direction.Value.y < 0)
+                                direction.Value.y = -direction.Value.y;
+                        if (localPosition.y >= playAreaMax)
+                            if (direction.Value.y > 0)
+                                direction.Value.y = -direction.Value.y;
                         break;
                     }
                 }
