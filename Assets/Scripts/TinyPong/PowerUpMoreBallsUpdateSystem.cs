@@ -24,7 +24,6 @@ public class PowerUpMoreBallsUpdateSystem : JobComponentSystem
         m_EntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
-
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
         var powerUpBounds = m_PowerUpQuery.ToComponentDataArray<LocalBounds>(Allocator.TempJob);
@@ -35,7 +34,7 @@ public class PowerUpMoreBallsUpdateSystem : JobComponentSystem
         Entities
             .WithAll<Ball>()
             .WithoutBurst()
-            .ForEach((in LocalBounds localBounds, in Parent parent, in Translation translation) =>
+            .ForEach((ref Translation translation, in LocalBounds localBounds, in Parent parent) =>
             {
                 var radius = localBounds.Extents.x;
                 var localPosition = translation.Value.xy;

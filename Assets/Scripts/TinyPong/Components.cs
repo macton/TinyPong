@@ -2,6 +2,10 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Tiny.Input;
 
+public struct PlayArea : IComponentData
+{
+}
+
 public struct Ball : IComponentData
 {
 }

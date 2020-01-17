@@ -15,6 +15,16 @@ public class LocalBoundsUpdateSystem : JobComponentSystem
             localBounds.Center = translation.Value.xy;
             localBounds.Extents = new float2 {x = width * 0.5f, y = height * 0.5f};
         }).Run();
+        
+        Entities
+            .WithNone<LocalToParent>()
+            .ForEach((ref LocalBounds localBounds, in Translation translation, in LocalToWorld localToWorld) =>
+        {
+            var height = math.abs(math.mul(localToWorld.Value, new float4(0.0f, 1.0f, 0.0f, 0.0f)).y);
+            var width = math.abs(math.mul(localToWorld.Value, new float4(1.0f, 0.0f, 0.0f, 0.0f)).x);
+            localBounds.Center = translation.Value.xy;
+            localBounds.Extents = new float2 {x = width * 0.5f, y = height * 0.5f};
+        }).Run();
 
         return lastJobHandle;
     }

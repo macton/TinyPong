@@ -1,7 +1,6 @@
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Tiny;
 using Unity.Transforms;
 
 /// <summary>
@@ -30,8 +29,6 @@ public class SoloSpawnerSystem : JobComponentSystem
             {
                 if (soloSpawner.GeneratedCount < soloSpawner.GenerateMaxCount)
                 {
-                    Debug.Log("SPAWN");
-                    
                     var entity = commandBuffer.Instantiate(soloSpawner.Prefab);
                     var rx = (2.0f * soloSpawner.Random.NextFloat()) - 1.0f;
                     var ry = (2.0f * soloSpawner.Random.NextFloat()) - 1.0f;
@@ -47,7 +44,7 @@ public class SoloSpawnerSystem : JobComponentSystem
                         }
                     });
                     commandBuffer.AddComponent(entity, parent);    
-                    commandBuffer.AddComponent(entity, localToParent);    
+                    commandBuffer.AddComponent(entity, localToParent);
                     soloSpawner.GeneratedCount++;
                 }
                 secondsUntilGenerate = soloSpawner.CoolDownSeconds;
