@@ -1150,6 +1150,7 @@ GameObject:
   - component: {fileID: 1760631842}
   - component: {fileID: 1760631841}
   - component: {fileID: 1760631840}
+  - component: {fileID: 1760631839}
   m_Layer: 0
   m_Name: Play Area
   m_TagString: Untagged
@@ -1157,6 +1158,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1760631839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760631838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad483d18c4354c9e897adf7714cc8cc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Speed: 0
 --- !u!23 &1760631840
 MeshRenderer:
   m_ObjectHideFlags: 0

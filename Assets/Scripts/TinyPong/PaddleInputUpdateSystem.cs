@@ -2,14 +2,18 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Tiny;
 using Unity.Tiny.Input;
 using Unity.Transforms;
 
 public class PaddleInputUpdateSystem : JobComponentSystem
 {
     EntityQuery m_BallQuery;
-    bool m_First = true;
+
+    // Don't need to be *exactly* between x extents
+    private const float kTouchWidthSlop = 0.025f;
+
+    // Don't adjust if pretty close to center y (amount of y extents to ignore)
+    private const float kTouchCenterSlopRatio = 0.25f;
 
     protected override void OnCreate()
     {
@@ -21,26 +25,18 @@ public class PaddleInputUpdateSystem : JobComponentSystem
                 ComponentType.ReadWrite<Translation>()
             },
         });
-        
     }
 
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
         var deltaTime = math.min(1.0f / 60.0f, Time.DeltaTime);
+
         var Input = World.GetExistingSystem<InputSystem>();
+        var playAreaEntity = GetSingletonEntity<PlayArea>();
+        var playAreaTouchPointBuffer = EntityManager.GetBuffer<TouchPoint>(playAreaEntity);
 
         var translationFromEntity = GetComponentDataFromEntity<Translation>(false);
         var ballEntities = m_BallQuery.ToEntityArray(Allocator.TempJob);
-
-        if (m_First)
-        {
-            if (Input.IsTouchSupported())
-                Debug.Log("TOUCH SUPPORTED");
-            else
-                Debug.Log("MOUSE SUPPORTED");
-
-            m_First = false;
-        }
 
         Entities
             .WithoutBurst()
@@ -53,82 +49,19 @@ public class PaddleInputUpdateSystem : JobComponentSystem
                 in Speed speed,
                 in LocalBounds localBounds) =>
             {
-                
-                if (Input.IsTouchSupported() && Input.TouchCount() > 0)
+                var nextAutoKeyTime = 0.0f;
+
+                var wasUserInput = TranslationFromUserInput(ref translation, playAreaTouchPointBuffer, localBounds, speed, deltaTime, Input, keyCodeUp, keyCodeDown);
+                if (!wasUserInput)
                 {
-                    for (var i = 0; i < Input.TouchCount(); i++)
-                    {
-                        var itouch = Input.GetTouch(i);
-                        PressAtPosition(new float2(itouch.x, itouch.y));
-                    }
-                }
-                else
-                {
-                    if (Input.GetMouseButton(0))
-                    {
-                        var pos = PressAtPosition(Input.GetInputPosition());
-                        Debug.Log( $"localBounds {localBounds.Center.x}, {localBounds.Center.y} - {localBounds.Extents.x}, {localBounds.Extents.y}");
-                        if (localBounds.Contains(pos, localBounds.Extents.x))
-                        {
-                            if (pos.y > localBounds.Center.y)
-                            {
-                                autoKeyTimer.Value = 0.0f;
-                                Up(ref translation, localBounds, speed, deltaTime);
-                            }
-                            else
-                            {
-                                autoKeyTimer.Value = 0.0f;
-                                Down(ref translation, localBounds, speed, deltaTime);
-                            }
-                        }
-                    }
-                }
-                
-                if (Input.GetKey(keyCodeUp.Value))
-                {
-                    Up(ref translation, localBounds, speed, deltaTime);
-                    autoKeyTimer.Value = 0.0f;
-                }
-                else if (Input.GetKey(keyCodeDown.Value))
-                {
-                    Down(ref translation, localBounds, speed, deltaTime);
-                    autoKeyTimer.Value = 0.0f;
-                }
-                else // Simple AI: Move toward ball.
-                {
-                    autoKeyTimer.Value += deltaTime;
+                    nextAutoKeyTime = autoKeyTimer.Value + deltaTime;
                     if (autoKeyTimer.Value >= autoKeyConfig.AutoKeyTimeout)
                     {
-                        // follow first ball
-                        
-                        if (ballEntities.Length > 0)
-                        {
-                            var bestIndex = 0;
-                            float bestDist = 100.0f;
-                            for (int i = 0; i < ballEntities.Length; i++)
-                            {
-                                var be = ballEntities[i];
-                                var bt = translationFromEntity[be].Value.xy;
-                                var d = math.distance(bt, translation.Value.xy);
-                                if (d < bestDist)
-                                {
-                                    bestDist = d;
-                                    bestIndex = i;
-                                }
-                            }
-                            
-                            var ballEntity = ballEntities[bestIndex];
-                            var ballTranslation = translationFromEntity[ballEntity];
-                            if (math.abs(ballTranslation.Value.x - translation.Value.x) < autoKeyConfig.AutoReactDistance)
-                            {
-                                if (ballTranslation.Value.y > (localBounds.Center.y + (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
-                                    Up(ref translation, localBounds, speed, deltaTime);
-                                else if (ballTranslation.Value.y < (localBounds.Center.y - (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
-                                    Down(ref translation, localBounds, speed, deltaTime);
-                            }
-                        }
+                        TranslationFromAutoInput(ref translation, ballEntities, translationFromEntity, autoKeyConfig, localBounds, speed, deltaTime);
                     }
                 }
+
+                autoKeyTimer.Value = nextAutoKeyTime;
             }).Run();
 
         ballEntities.Dispose();
@@ -136,45 +69,87 @@ public class PaddleInputUpdateSystem : JobComponentSystem
         return lastJobHandle;
     }
 
-    private float2 PressAtPosition(float2 inputScreenPosition)
+    private static void TranslationFromAutoInput(ref Translation translation, in NativeArray<Entity> ballEntities,
+        in ComponentDataFromEntity<Translation> translationFromEntity, in AutoKeyConfig autoKeyConfig,
+        in LocalBounds localBounds, in Speed speed, float deltaTime)
     {
-        var di = GetSingleton<DisplayInfo>();
-        var playAreaEntity = GetSingletonEntity<PlayArea>();
-        var playAreaBounds = EntityManager.GetComponentData<LocalBounds>(playAreaEntity);
-
-        var height = di.height;
-        int width = di.width;
-        float targetRatio = 1920.0f / 1080.0f;
-        float actualRatio = (float) width / (float) height;
-        
-        if (actualRatio > targetRatio)
+        if (ballEntities.Length > 0)
         {
-            width = (int) (di.height * targetRatio);
-            inputScreenPosition.x -= (di.width - width) / 2.0f;
+            // Follow nearest ball
+            var bestIndex = 0;
+            float bestDist = 100.0f;
+            for (int i = 0; i < ballEntities.Length; i++)
+            {
+                var be = ballEntities[i];
+                var bt = translationFromEntity[be].Value.xy;
+                var d = math.distance(bt, translation.Value.xy);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    bestIndex = i;
+                }
+            }
+
+            var ballEntity = ballEntities[bestIndex];
+            var ballTranslation = translationFromEntity[ballEntity];
+            if (math.abs(ballTranslation.Value.x - translation.Value.x) <
+                autoKeyConfig.AutoReactDistance)
+            {
+                if (ballTranslation.Value.y > (localBounds.Center.y + (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
+                    Up(ref translation, localBounds, speed, deltaTime);
+                else if (ballTranslation.Value.y < (localBounds.Center.y - (autoKeyConfig.AutoBoundsRange * localBounds.Extents.y)))
+                    Down(ref translation, localBounds, speed, deltaTime);
+            }
         }
-        
-        var x0 = inputScreenPosition.x / width;
-        var y0 = inputScreenPosition.y / height;
-
-        var screenYRatio = (float)height / (float)width;
-        Debug.Log($"screen {width} x {height} = {screenYRatio}");
-        
-        var playAreaYRatio = playAreaBounds.Extents.y / playAreaBounds.Extents.x;
-        Debug.Log($"playArea {playAreaBounds.Extents.x} x {playAreaBounds.Extents.y} = {playAreaYRatio}");
-        
-        var finalYRatio = screenYRatio / playAreaYRatio;
-
-        var x1 = x0 - 0.5f;
-        var y1 = y0 - 0.5f;
-        
-        var x = x1;
-        var y = y1 * finalYRatio;
-
-        Debug.Log($"Touch {x}, {y}");
-        return new float2(x,y);
     }
 
-    private static void Down(ref Translation translation, in LocalBounds localBounds, in Speed speed, float deltaTime)
+    private static bool TranslationFromUserInput(ref Translation translation,
+        in DynamicBuffer<TouchPoint> playAreaTouchPointBuffer, in LocalBounds localBounds,
+        in Speed speed, float deltaTime, in InputSystem Input, in KeyCodeUp keyCodeUp, in KeyCodeDown keyCodeDown)
+    {
+        var userInput = false;
+        if (playAreaTouchPointBuffer.Length > 0)
+        {
+            for (int i = 0; i < playAreaTouchPointBuffer.Length; i++)
+            {
+                var touchPoint = playAreaTouchPointBuffer[i].Value;
+                var inLeft = touchPoint.x > (localBounds.Center.x - localBounds.Extents.x - kTouchWidthSlop);
+                var inRight = touchPoint.x < (localBounds.Center.x + localBounds.Extents.x + kTouchWidthSlop);
+                var inTouch = inLeft && inRight;
+                if (inTouch)
+                {
+                    var upperBound = localBounds.Center.y + (localBounds.Extents.y * kTouchCenterSlopRatio);
+                    var lowerBound = localBounds.Center.y - (localBounds.Extents.y * kTouchCenterSlopRatio);
+                    if (touchPoint.y > upperBound)
+                    {
+                        userInput = true;
+                        Up(ref translation, localBounds, speed, deltaTime);
+                    }
+                    else if (touchPoint.y < lowerBound)
+                    {
+                        userInput = true;
+                        Down(ref translation, localBounds, speed, deltaTime);
+                    }
+                }
+            }
+        }
+
+        else if (Input.GetKey(keyCodeUp.Value))
+        {
+            userInput = true;
+            Up(ref translation, localBounds, speed, deltaTime);
+        }
+        else if (Input.GetKey(keyCodeDown.Value))
+        {
+            userInput = true;
+            Down(ref translation, localBounds, speed, deltaTime);
+        }
+
+        return userInput;
+    }
+
+
+    static void Down(ref Translation translation, in LocalBounds localBounds, in Speed speed, float deltaTime)
     {
         var min = -0.5f + localBounds.Extents.y;
         var max = 0.5f - localBounds.Extents.y;
@@ -183,7 +158,7 @@ public class PaddleInputUpdateSystem : JobComponentSystem
         translation.Value.y = math.clamp(cur - (speed.Value * deltaTime), min, max);
     }
 
-    private static void Up(ref Translation translation, in LocalBounds localBounds, in Speed speed, float deltaTime)
+    static void Up(ref Translation translation, in LocalBounds localBounds, in Speed speed, float deltaTime)
     {
         var min = -0.5f + localBounds.Extents.y;
         var max = 0.5f - localBounds.Extents.y;

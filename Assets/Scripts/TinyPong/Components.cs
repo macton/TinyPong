@@ -108,3 +108,8 @@ public struct PowerUpMoreBalls : IBufferElementData
 {
     public Entity Value;
 }
+
+public struct TouchPoint : IBufferElementData
+{
+    public float2 Value;
+}
