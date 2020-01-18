@@ -80,11 +80,6 @@ public struct PrevScore : IComponentData
     public int Value;
 }
 
-public struct UIElement : IBufferElementData
-{
-    public Entity Value;
-}
-
 public struct ScoreManager : IComponentData
 {
     public Entity LeftScoreEntity;
@@ -112,4 +107,8 @@ public struct PowerUpMoreBalls : IBufferElementData
 public struct TouchPoint : IBufferElementData
 {
     public float2 Value;
+}
+
+public struct NumbersPrefabGroup : IComponentData
+{
 }

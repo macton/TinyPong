@@ -16,14 +16,17 @@ public class ScoreUISystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle lastJobHandle)
     {
+        if (!HasSingleton<NumbersPrefabGroup>())
+            return lastJobHandle;
+        
         var commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
+        var numbersEntity = GetSingletonEntity<NumbersPrefabGroup>();
+        var numbersElements = EntityManager.GetBuffer<LinkedEntityGroup>(numbersEntity).Reinterpret<Entity>().ToNativeArray(Allocator.TempJob);
 
         Entities
             .WithStructuralChanges()
-            .ForEach((Entity entity, ref PrevScore prevScore, in Score score, in Translation translation, in DynamicBuffer<UIElement> uiElementBuffer) =>
+            .ForEach((Entity entity, ref PrevScore prevScore, in Score score, in Translation translation) =>
             {
-                var uiElements = uiElementBuffer.Reinterpret<Entity>().ToNativeArray(Allocator.Temp);
-                
                 if (score.Value != prevScore.Value)
                 {
                     var instanceBuffer = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
@@ -43,7 +46,7 @@ public class ScoreUISystem : JobComponentSystem
                     var tens = (score.Value - (hundreds * 100)) / 10;
                     var ones = (score.Value - (hundreds * 100) - (tens * 10));
 
-                    var prefab0 = uiElements[hundreds];
+                    var prefab0 = numbersElements[hundreds];
                     var entity0 = EntityManager.Instantiate(prefab0);
                     EntityManager.SetComponentData(entity0, new Translation
                     {
@@ -55,7 +58,7 @@ public class ScoreUISystem : JobComponentSystem
                         }
                     });
                     
-                    var prefab1 = uiElements[tens];
+                    var prefab1 = numbersElements[tens];
                     var entity1 = EntityManager.Instantiate(prefab1);
                     EntityManager.SetComponentData(entity1, new Translation
                     {
@@ -67,7 +70,7 @@ public class ScoreUISystem : JobComponentSystem
                         }
                     });
                     
-                    var prefab2 = uiElements[ones];
+                    var prefab2 = numbersElements[ones];
                     var entity2 = EntityManager.Instantiate(prefab2);
                     EntityManager.SetComponentData(entity2, new Translation
                     {
@@ -86,10 +89,9 @@ public class ScoreUISystem : JobComponentSystem
                     
                     prevScore.Value = score.Value;
                 }
-                
-                uiElements.Dispose();
             }).Run();
 
+        numbersElements.Dispose();
         m_EntityCommandBufferSystem.AddJobHandleForProducer(lastJobHandle); 
         
         return lastJobHandle;
